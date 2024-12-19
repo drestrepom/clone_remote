@@ -23,7 +23,7 @@ class PayloadDownload(TypedDict):
     root_nickname: str
 
 
-DESTINATION_BASE = os.environ.get("DESTINATION_BASE", "/home/ec2-user/")
+DESTINATION_BASE = os.environ.get("DESTINATION_BASE", "/home/ec2-user/groups")
 app = Flask(__name__)
 
 LOGGER = logging.getLogger(__name__)
