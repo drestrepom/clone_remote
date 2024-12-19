@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "download-repo-api"
+version = "0.1.0"
+description = ""
+authors = ["Diego Restrepo <drestrepo@fluidattacks.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<4.0"
+fluidattacks-core = "^2.2.8"
+flask = {version = "^3.1.0", extras = ["async"]}
+more-itertools = "^10.5.0"
+gunicorn = "^23.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
