@@ -63,15 +63,22 @@ def get_recent_commit_after(
 
         # Ejecuta `git log --follow` para rastrear renombres y obtener commits
         logs = repo.git.log(
-            "--reverse", "--follow", "--format=%H", "--name-status", "--", file_path
+            f"{commit_a_hash}..HEAD",
+            "--reverse",
+            "--follow",
+            "--format=%H",
+            "--name-status",
+            "--",
+            file_path,
         )
         if not logs:
             return None
 
         commits_candidate = []
         last_known_path = file_path
+        chuncks = list(chunked(logs.split("\n"), 3))
 
-        for commit_hash, _, file_changes in chunked(logs.split("\n"), 3):
+        for commit_hash, _, file_changes in chuncks:
             commit = repo.commit(commit_hash)
             change_parts = file_changes.split("\t")
             if change_parts[0].startswith("R"):  # Detecta renombrados
@@ -90,17 +97,27 @@ def get_recent_commit_after(
             if commit.committed_date > commit_a.committed_date:
                 commit_date = commit.committed_datetime
 
+                # Almacena los commits que cumplen la condición
+                commits_candidate.append((commit, last_known_path))
                 # Detén la búsqueda si el commit es igual o más reciente que la fecha objetivo
                 if commit_date >= target_date:
                     break
-                # Almacena los commits que cumplen la condición
-                commits_candidate.append((commit, last_known_path))
 
         if not commits_candidate:
             return None
 
         # Devuelve el commit más reciente y la última ruta conocida
-        most_recent_commit, final_path = commits_candidate[-1]
+        index = -1
+        while True:
+            try:
+                most_recent_commit, final_path = commits_candidate[index]
+                get_file_content(repo, most_recent_commit.hexsha, final_path)
+                break
+            except KeyError:
+                index -= 1
+            except IndexError:
+                return None
+
         return most_recent_commit.hexsha, final_path
 
     except Exception as e:
@@ -223,6 +240,7 @@ async def handle_post():
         return jsonify({"message": "Datos recibidos correctamente.", "data": data}), 200
 
     except Exception as e:
+        print(e)
         return jsonify({"error": f"Ocurrió un error: {str(e)}"}), 500
 
 
